@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link type="text/css" rel="stylesheet" href="https://threejs.org/examples/main.css">
+
+<!--    https://threejs.org/examples/?q=physics#physics_ammo_rope-->
+    <script src="https://raw.githubusercontent.com/mrdoob/three.js/master/examples/js/libs/ammo.js"></script>
+</head>
+<body>
+
+<div id="container"></div>
+
+<script type="x-shader/x-vertex" id="vertexShader">
+    varying vec3 vWorldPosition;
+    void main() {
+        vec4 worldPosition = modelMatrix * vec4( position, 1.0 );
+        vWorldPosition = worldPosition.xyz;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+    }
+
+
+
+</script>
+
+<script type="x-shader/x-fragment" id="fragmentShader">
+    uniform vec3 topColor;
+    uniform vec3 bottomColor;
+    uniform float offset;
+    uniform float exponent;
+    varying vec3 vWorldPosition;
+    void main() {
+        float h = normalize( vWorldPosition + offset ).y;
+        gl_FragColor = vec4( mix( bottomColor, topColor, max( pow( max( h , 0.0), exponent ), 0.0 ) ), 1.0 );
+    }
+
+
+
+</script>
+
+<script type="module">
+    import * as THREE from 'https://threejs.org/build/three.module.js';
+    import Stats from 'https://threejs.org/examples/jsm/libs/stats.module.js';
+    import {GLTFLoader} from 'https://threejs.org/examples/jsm/loaders/GLTFLoader.js';
+    import {OrbitControls} from 'https://threejs.org/examples/jsm/controls/OrbitControls.js';
+
+    var camera, scene, renderer, dirLight, dirLightHeper, hemiLight, hemiLightHelper;
+    var mixers = [];
+    var stats;
+    var HERO;
+    var clock = new THREE.Clock();
+
+    init();
+    animate();
+
+    function init() {
+        // view-source:https://stemkoski.github.io/Three.js/Collision-Detection.html
+        var container = document.getElementById('container');
+
+        camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 1, 5000);
+
+        // camera.position.set(0, 30, 350);
+        camera.position.set(-80, 60, 0);
+        camera.rotation.set(0, -1.6, 0);
+
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color().setHSL(0.6, 0, 1);
+        scene.fog = new THREE.Fog(scene.background, 1, 5000);
+
+        // LIGHTS
+
+        hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.6);
+        hemiLight.color.setHSL(0.6, 1, 0.6);
+        hemiLight.groundColor.setHSL(0.095, 1, 0.75);
+        hemiLight.position.set(0, 50, 0);
+        scene.add(hemiLight);
+
+        hemiLightHelper = new THREE.HemisphereLightHelper(hemiLight, 10);
+        scene.add(hemiLightHelper);
+
+        //
+
+        dirLight = new THREE.DirectionalLight(0xffffff, 1);
+        dirLight.color.setHSL(0.1, 1, 0.95);
+        dirLight.position.set(-1, 1.75, 1);
+        dirLight.position.multiplyScalar(30);
+        scene.add(dirLight);
+
+        dirLight.castShadow = true;
+
+        dirLight.shadow.mapSize.width = 2048;
+        dirLight.shadow.mapSize.height = 2048;
+
+        var d = 50;
+
+        dirLight.shadow.camera.left = -d;
+        dirLight.shadow.camera.right = d;
+        dirLight.shadow.camera.top = d;
+        dirLight.shadow.camera.bottom = -d;
+
+        dirLight.shadow.camera.far = 3500;
+        dirLight.shadow.bias = -0.0001;
+
+        dirLightHeper = new THREE.DirectionalLightHelper(dirLight, 10);
+        scene.add(dirLightHeper);
+
+        // GROUND
+        var groundGeo = new THREE.PlaneBufferGeometry(10000, 10000);
+        var groundMat = new THREE.MeshLambertMaterial({color: 0xffffff});
+        groundMat.color.setHSL(0.095, 1, 0.75);
+
+        var ground = new THREE.Mesh(groundGeo, groundMat);
+        ground.position.y = 0;
+        ground.rotation.x = -Math.PI / 2;
+        ground.receiveShadow = true;
+        scene.add(ground);
+
+        // SKYDOME
+        var vertexShader = document.getElementById('vertexShader').textContent;
+        var fragmentShader = document.getElementById('fragmentShader').textContent;
+        var uniforms = {
+            "topColor": {value: new THREE.Color(0x0077ff)},
+            "bottomColor": {value: new THREE.Color(0xffffff)},
+            "offset": {value: 33},
+            "exponent": {value: 0.6}
+        };
+        uniforms["topColor"].value.copy(hemiLight.color);
+
+        scene.fog.color.copy(uniforms["bottomColor"].value);
+
+        var skyGeo = new THREE.SphereBufferGeometry(4000, 32, 15);
+        var skyMat = new THREE.ShaderMaterial({
+            uniforms: uniforms,
+            vertexShader: vertexShader,
+            fragmentShader: fragmentShader,
+            side: THREE.BackSide
+        });
+
+        var sky = new THREE.Mesh(skyGeo, skyMat);
+        scene.add(sky);
+
+        // MODEL
+
+        var loader = new GLTFLoader();
+
+        loader.load('https://threejs.org/examples/models/gltf/Flamingo.glb', function (gltf) {
+            var mesh = gltf.scene.children[0];
+
+            var s = 0.35;
+            mesh.scale.set(s, s, s);
+            // высота фраминго
+            mesh.position.y = 50;
+            // mesh.rotation.y = -1;
+            mesh.rotation.y = 1.55;
+
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+
+            HERO = mesh;
+
+            scene.add(mesh);
+
+            var mixer = new THREE.AnimationMixer(mesh);
+            mixer.clipAction(gltf.animations[0]).setDuration(1).play();
+            mixers.push(mixer);
+        });
+
+        // var geometry = new THREE.PlaneBufferGeometry( 100, 100 );
+        // var texture = new THREE.CanvasTexture(generateTexture());
+        // for (var i = 0; i < 15; i++) {
+        //     var material = new THREE.MeshBasicMaterial({
+        //         color: new THREE.Color().setHSL(0.3, 0.75, (i / 15) * 0.4 + 0.1),
+        //         map: texture,
+        //         depthTest: false,
+        //         depthWrite: false,
+        //         transparent: true
+        //     });
+        //     var mesh = new THREE.Mesh(geometry, material);
+        //     mesh.position.y = i * 0.25;
+        //     mesh.rotation.x = -Math.PI / 2;
+        //     scene.add(mesh);
+        // }
+
+        for (let i = 0; i < 100; i++) {
+            addBox(scene, i);
+        }
+
+        // RENDERER
+
+        renderer = new THREE.WebGLRenderer({antialias: true});
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        container.appendChild(renderer.domElement);
+        renderer.outputEncoding = THREE.sRGBEncoding;
+        renderer.shadowMap.enabled = true;
+
+        // var controls = new OrbitControls(camera, renderer.domElement);
+        // controls.addEventListener('change', render);
+        // controls.minDistance = 50;
+        // controls.maxDistance = 500;
+        // controls.enablePan = false;
+        // controls.target.set(0, 20, 0);
+        // controls.update();
+
+        // STATS
+
+        stats = new Stats();
+        container.appendChild(stats.dom);
+        window.addEventListener('resize', onWindowResize, false);
+    }
+
+    function addBox(scene, x = 0) {
+        let height = 50;
+        let boxMaxWidth = 600;
+        var geometry = new THREE.BoxGeometry(10, height, 10);
+        var material = new THREE.MeshPhongMaterial({color: 0xFF9500});
+        var cube = new THREE.Mesh(geometry, material);
+        cube.position.x = 50 * x;
+        cube.position.y = height / 2;
+        cube.position.z = (Math.random() * boxMaxWidth) - (boxMaxWidth / 2);
+        cube.rotation.set(0, Math.random(), 0);
+        cube.castShadow = true;
+        cube.receiveShadow = true;
+        scene.add(cube);
+        collidableMeshList.push(cube);
+    }
+
+    function generateTexture() {
+        var canvas = document.createElement('canvas');
+        canvas.width = 512;
+        canvas.height = 512;
+        var context = canvas.getContext('2d');
+        for (var i = 0; i < 20000; i++) {
+
+            context.fillStyle = 'hsl(0,0%,' + (Math.random() * 50 + 50) + '%)';
+            context.beginPath();
+            context.arc(Math.random() * canvas.width, Math.random() * canvas.height, Math.random() + 0.15, 0, Math.PI * 2, true);
+            context.fill();
+
+        }
+        context.globalAlpha = 0.075;
+        context.globalCompositeOperation = 'lighter';
+        return canvas;
+    }
+
+    function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function update(delta) {
+        if (!HERO) {
+            return;
+        }
+        let moveDistance = 150 * delta; // 200 pixels per second
+
+        // const speed = 10;
+        // // if ( keyboard.pressed("left") )
+        // //     MovingCube.position.x -= moveDistance;
+        // // if ( keyboard.pressed("right") )
+        // //     MovingCube.position.x += moveDistance;
+
+        // if (keyboard.pressed("up")) {
+        //
+        // }
+        // // MovingCube.position.z -= moveDistance;
+        // if (keyboard.pressed("down"))
+        //     MovingCube.position.z += moveDistance;
+
+        // if (!keyBoardAlreadyHooked) {
+        //     keyBoardAlreadyHooked = true;
+        //     document.addEventListener('keydown', function (event) {
+        //         switch (event.code) {
+        //             // case 'ArrowLeft':
+        //             //     HERO.position.z -= moveDistance / 2;
+        //             //     break;
+        //             // case 'ArrowRight':
+        //             //     HERO.position.z += moveDistance / 2;
+        //             //     break;
+        //             case 'ArrowUp':
+        //                 HERO.position.x += moveDistance;
+        //                 camera.position.x += moveDistance;
+        //                 break;
+        //             // case 'ArrowDown':
+        //             //     HERO.position.x -= moveDistance;
+        //             //     camera.position.x -= moveDistance;
+        //             //     break;
+        //         }
+        //     });
+        // }
+
+        HERO.position.x += moveDistance;
+        camera.position.x += moveDistance;
+
+
+        var originPoint = HERO.position.clone();
+
+        // console.log('HERO.geometry', HERO.geometry);
+
+        console.log(HERO.position);
+        // console.log(yourCube.position.distanceToSquared(HERO.position));
+        // for (var vertexIndex = 0; vertexIndex < HERO.geometry.vertices.length; vertexIndex++) {
+        //     var localVertex = HERO.geometry.vertices[vertexIndex].clone();
+        //     var globalVertex = localVertex.applyMatrix4(HERO.matrix);
+        //     var directionVector = globalVertex.sub(HERO.position);
+        //
+        //     var ray = new THREE.Raycaster(originPoint, directionVector.clone().normalize());
+        //     var collisionResults = ray.intersectObjects(collidableMeshList);
+        //     if (collisionResults.length > 0 && collisionResults[0].distance < directionVector.length()) {
+        //         alert(1);
+        //     }
+        // }
+    }
+
+    function animate() {
+        requestAnimationFrame(animate);
+        render();
+        stats.update();
+    }
+
+    function render() {
+        var delta = clock.getDelta();
+        for (var i = 0; i < mixers.length; i++) {
+            mixers[i].update(delta);
+        }
+        update(delta);
+        renderer.render(scene, camera);
+    }
+
+</script>
+</body>
+</html>
