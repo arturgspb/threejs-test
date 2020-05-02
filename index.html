@@ -24,6 +24,7 @@
 
 
 
+
 </script>
 
 <script type="x-shader/x-fragment" id="fragmentShader">
@@ -36,6 +37,7 @@
         float h = normalize( vWorldPosition + offset ).y;
         gl_FragColor = vec4( mix( bottomColor, topColor, max( pow( max( h , 0.0), exponent ), 0.0 ) ), 1.0 );
     }
+
 
 
 
@@ -212,7 +214,6 @@
     }
 
     function initInput() {
-
         window.addEventListener('keydown', function (event) {
             switch (event.code) {
                 case 'ArrowRight':
