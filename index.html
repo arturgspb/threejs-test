@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link type="text/css" rel="stylesheet" href="https://threejs.org/examples/main.css">
 
-<!--    https://threejs.org/examples/?q=physics#physics_ammo_rope-->
-    <script src="https://raw.githubusercontent.com/mrdoob/three.js/master/examples/js/libs/ammo.js"></script>
+    <script src="https://threejs.org/examples/js/libs/ammo.js"></script>
 </head>
 <body>
 
@@ -19,6 +18,9 @@
         vWorldPosition = worldPosition.xyz;
         gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
     }
+
+
+
 
 
 
@@ -37,6 +39,9 @@
 
 
 
+
+
+
 </script>
 
 <script type="module">
@@ -50,14 +55,51 @@
     var stats;
     var HERO;
     var clock = new THREE.Clock();
+    var armMovement = 0;
+    var speedRate = 1;
 
-    init();
-    animate();
+    // Physics variables
+    var gravityConstant = -9.8;
+    var collisionConfiguration;
+    var dispatcher;
+    var broadphase;
+    var solver;
+    var softBodySolver;
+    var physicsWorld;
+    var rigidBodies = [];
+    var margin = 0.05;
+    var hinge;
+    var rope;
+    var transformAux1;
+
+    Ammo().then(function (AmmoLib) {
+        Ammo = AmmoLib;
+        init();
+        animate();
+    });
 
     function init() {
-        // view-source:https://stemkoski.github.io/Three.js/Collision-Detection.html
+        initGraphics();
+        initPhysics();
+        initObjects();
+        initInput();
+
+
+        // var controls = new OrbitControls(camera, renderer.domElement);
+        // controls.addEventListener('change', render);
+        // controls.minDistance = 50;
+        // controls.maxDistance = 500;
+        // controls.enablePan = false;
+        // controls.target.set(0, 20, 0);
+        // controls.update();
+
+
+    }
+
+    function initGraphics() {
         var container = document.getElementById('container');
 
+        // view-source:https://stemkoski.github.io/Three.js/Collision-Detection.html
         camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 1, 5000);
 
         // camera.position.set(0, 30, 350);
@@ -140,6 +182,63 @@
         var sky = new THREE.Mesh(skyGeo, skyMat);
         scene.add(sky);
 
+        // RENDERER
+        renderer = new THREE.WebGLRenderer({antialias: true});
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        container.appendChild(renderer.domElement);
+        renderer.outputEncoding = THREE.sRGBEncoding;
+        renderer.shadowMap.enabled = true;
+
+        // STATS
+        stats = new Stats();
+        container.appendChild(stats.dom);
+        window.addEventListener('resize', onWindowResize, false);
+    }
+
+    function initPhysics() {
+        // https://github.com/mrdoob/three.js/blob/master/examples/physics_ammo_rope.html
+        // Physics configuration
+        collisionConfiguration = new Ammo.btSoftBodyRigidBodyCollisionConfiguration();
+        dispatcher = new Ammo.btCollisionDispatcher(collisionConfiguration);
+        broadphase = new Ammo.btDbvtBroadphase();
+        solver = new Ammo.btSequentialImpulseConstraintSolver();
+        softBodySolver = new Ammo.btDefaultSoftBodySolver();
+        physicsWorld = new Ammo.btSoftRigidDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration, softBodySolver);
+        physicsWorld.setGravity(new Ammo.btVector3(0, gravityConstant, 0));
+        physicsWorld.getWorldInfo().set_m_gravity(new Ammo.btVector3(0, gravityConstant, 0));
+
+        transformAux1 = new Ammo.btTransform();
+    }
+
+    function initInput() {
+
+        window.addEventListener('keydown', function (event) {
+            switch (event.code) {
+                case 'ArrowRight':
+                    armMovement = 1;
+                    break;
+                case 'ArrowLeft':
+                    armMovement = -1;
+                    break;
+                case 'ArrowUp':
+                    speedRate = 2;
+                    break;
+                case 'ArrowDown':
+                    speedRate = 0.5;
+                    break;
+            }
+        }, false);
+        window.addEventListener('keyup', function (e) {
+            armMovement = 0;
+            if (e.code === 'ArrowUp' || e.code === 'ArrowDown') {
+                speedRate = 1;
+            }
+        }, false);
+    }
+
+
+    function initObjects() {
         // MODEL
 
         var loader = new GLTFLoader();
@@ -166,53 +265,14 @@
             mixers.push(mixer);
         });
 
-        // var geometry = new THREE.PlaneBufferGeometry( 100, 100 );
-        // var texture = new THREE.CanvasTexture(generateTexture());
-        // for (var i = 0; i < 15; i++) {
-        //     var material = new THREE.MeshBasicMaterial({
-        //         color: new THREE.Color().setHSL(0.3, 0.75, (i / 15) * 0.4 + 0.1),
-        //         map: texture,
-        //         depthTest: false,
-        //         depthWrite: false,
-        //         transparent: true
-        //     });
-        //     var mesh = new THREE.Mesh(geometry, material);
-        //     mesh.position.y = i * 0.25;
-        //     mesh.rotation.x = -Math.PI / 2;
-        //     scene.add(mesh);
-        // }
-
         for (let i = 0; i < 100; i++) {
             addBox(scene, i);
         }
-
-        // RENDERER
-
-        renderer = new THREE.WebGLRenderer({antialias: true});
-        renderer.setPixelRatio(window.devicePixelRatio);
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        container.appendChild(renderer.domElement);
-        renderer.outputEncoding = THREE.sRGBEncoding;
-        renderer.shadowMap.enabled = true;
-
-        // var controls = new OrbitControls(camera, renderer.domElement);
-        // controls.addEventListener('change', render);
-        // controls.minDistance = 50;
-        // controls.maxDistance = 500;
-        // controls.enablePan = false;
-        // controls.target.set(0, 20, 0);
-        // controls.update();
-
-        // STATS
-
-        stats = new Stats();
-        container.appendChild(stats.dom);
-        window.addEventListener('resize', onWindowResize, false);
     }
 
     function addBox(scene, x = 0) {
         let height = 50;
-        let boxMaxWidth = 600;
+        let boxMaxWidth = 200;
         var geometry = new THREE.BoxGeometry(10, height, 10);
         var material = new THREE.MeshPhongMaterial({color: 0xFF9500});
         var cube = new THREE.Mesh(geometry, material);
@@ -223,25 +283,6 @@
         cube.castShadow = true;
         cube.receiveShadow = true;
         scene.add(cube);
-        collidableMeshList.push(cube);
-    }
-
-    function generateTexture() {
-        var canvas = document.createElement('canvas');
-        canvas.width = 512;
-        canvas.height = 512;
-        var context = canvas.getContext('2d');
-        for (var i = 0; i < 20000; i++) {
-
-            context.fillStyle = 'hsl(0,0%,' + (Math.random() * 50 + 50) + '%)';
-            context.beginPath();
-            context.arc(Math.random() * canvas.width, Math.random() * canvas.height, Math.random() + 0.15, 0, Math.PI * 2, true);
-            context.fill();
-
-        }
-        context.globalAlpha = 0.075;
-        context.globalCompositeOperation = 'lighter';
-        return canvas;
     }
 
     function onWindowResize() {
@@ -254,52 +295,26 @@
         if (!HERO) {
             return;
         }
-        let moveDistance = 150 * delta; // 200 pixels per second
+        let moveDistance = (150 * speedRate) * delta; // 200 pixels per second
 
-        // const speed = 10;
-        // // if ( keyboard.pressed("left") )
-        // //     MovingCube.position.x -= moveDistance;
-        // // if ( keyboard.pressed("right") )
-        // //     MovingCube.position.x += moveDistance;
-
-        // if (keyboard.pressed("up")) {
-        //
-        // }
-        // // MovingCube.position.z -= moveDistance;
-        // if (keyboard.pressed("down"))
-        //     MovingCube.position.z += moveDistance;
-
-        // if (!keyBoardAlreadyHooked) {
-        //     keyBoardAlreadyHooked = true;
-        //     document.addEventListener('keydown', function (event) {
-        //         switch (event.code) {
-        //             // case 'ArrowLeft':
-        //             //     HERO.position.z -= moveDistance / 2;
-        //             //     break;
-        //             // case 'ArrowRight':
-        //             //     HERO.position.z += moveDistance / 2;
-        //             //     break;
-        //             case 'ArrowUp':
-        //                 HERO.position.x += moveDistance;
-        //                 camera.position.x += moveDistance;
-        //                 break;
-        //             // case 'ArrowDown':
-        //             //     HERO.position.x -= moveDistance;
-        //             //     camera.position.x -= moveDistance;
-        //             //     break;
-        //         }
-        //     });
-        // }
+        if (armMovement > 0) {
+            HERO.position.z += moveDistance / 2;
+            HERO.rotation.x = 1;
+        } else if (armMovement < 0) {
+            HERO.position.z -= moveDistance / 2;
+            HERO.rotation.x = -1;
+        } else {
+            HERO.rotation.x = 0;
+        }
 
         HERO.position.x += moveDistance;
         camera.position.x += moveDistance;
 
 
-        var originPoint = HERO.position.clone();
-
+        // var originPoint = HERO.position.clone();
         // console.log('HERO.geometry', HERO.geometry);
+        // console.log(HERO.position);
 
-        console.log(HERO.position);
         // console.log(yourCube.position.distanceToSquared(HERO.position));
         // for (var vertexIndex = 0; vertexIndex < HERO.geometry.vertices.length; vertexIndex++) {
         //     var localVertex = HERO.geometry.vertices[vertexIndex].clone();
