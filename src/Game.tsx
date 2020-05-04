@@ -1,23 +1,23 @@
 import React, {Component} from 'react';
-import * as THREE from "three";
-import Engine from "./game/engine";
+import Timer from "./components/Timer";
+import GameContext, {GameInfo} from "./ctx/GameContext";
+import GameContainer from "./components/GameContainer";
+
+const defaultGameInfo: GameInfo = {
+  gameState: "start"
+};
 
 class Game extends Component {
-    componentDidMount() {
-        const container = document.getElementById('container');
-        if (container !== null) {
-            let engine = new Engine(container);
-            engine.run();
-        }
-    }
-
-    render() {
-        return (
-            <div>
-                <div id="container"></div>
-            </div>
-        )
-    }
+  render() {
+    return (
+      <div>
+        <GameContext.Provider value={defaultGameInfo}>
+          <GameContainer/>
+          <Timer/>
+        </GameContext.Provider>
+      </div>
+    )
+  }
 }
 
 export default Game;
