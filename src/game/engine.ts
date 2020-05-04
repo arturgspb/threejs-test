@@ -2,6 +2,7 @@ import * as THREE from "three";
 import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader";
 import World from "./world";
 import {Dispatch, ReducerAction} from "react";
+import WorldConstants from "./WorldConstants";
 
 class Engine {
 
@@ -21,6 +22,8 @@ class Engine {
   private turbo = 0;
   private speedRate = 1;
   private collisions = [];
+  private world: World;
+  private worldConstants: WorldConstants;
 
   public dispatch: Function;
 
@@ -32,6 +35,9 @@ class Engine {
     this.camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 1, 5000);
 
     this.scene = new THREE.Scene();
+
+    this.world = new World();
+    this.worldConstants = new WorldConstants();
   }
 
   getScene() {
@@ -70,7 +76,16 @@ class Engine {
     this.renderer.outputEncoding = THREE.sRGBEncoding;
     this.renderer.shadowMap.enabled = true;
 
-    window.addEventListener('resize', this.onWindowResize, false);
+    const onWindowResize = () => {
+      if (this.camera) {
+        this.camera.aspect = window.innerWidth / window.innerHeight;
+        this.camera.updateProjectionMatrix();
+      }
+      if (this.renderer) {
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+      }
+    };
+    window.addEventListener('resize', onWindowResize, false);
   }
 
   initInput() {
@@ -127,21 +142,11 @@ class Engine {
 
   initObjects() {
     // GROUND
-    var groundGeo = new THREE.PlaneBufferGeometry(10000, 10000);
-    var groundMat = new THREE.MeshLambertMaterial({color: 0xffffff});
-    groundMat.color.setHSL(0.095, 1, 0.75);
 
-    var ground = new THREE.Mesh(groundGeo, groundMat);
-    ground.position.y = 0;
-    ground.rotation.x = -Math.PI / 2;
-    ground.receiveShadow = true;
-    // @ts-ignore
-    this.scene.add(ground);
+    this.world.addGround(this);
+    this.world.addSky(this);
 
-    let world = new World();
-    world.addSky(this);
-
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 1000; i++) {
       this.addBox(this.scene, i);
     }
 
@@ -152,7 +157,6 @@ class Engine {
 
       var s = 0.35;
       mesh.scale.set(s, s, s);
-      // высота фраминго
       mesh.position.x = -1000;
       mesh.position.y = 50;
       mesh.rotation.y = 1.55;
@@ -173,7 +177,7 @@ class Engine {
 
   addBox(scene: any, x = 0) {
     let height = 50;
-    let boxMaxWidth = 200;
+    let boxMaxWidth = this.worldConstants.boxMaxWidth;
 
     let cx = 150 * x;
     let cy = height / 2;
@@ -207,16 +211,6 @@ class Engine {
     this.collisions.push(bounds);
   }
 
-  onWindowResize() {
-    if (this.camera) {
-      this.camera.aspect = window.innerWidth / window.innerHeight;
-      this.camera.updateProjectionMatrix();
-    }
-    if (this.renderer) {
-      this.renderer.setSize(window.innerWidth, window.innerHeight);
-    }
-  }
-
   animate() {
     requestAnimationFrame(() => {
       this.animate();
@@ -230,14 +224,24 @@ class Engine {
     }
     let baseSpeed = 350 * delta;
     let moveDistance = (baseSpeed * this.speedRate); // 200 pixels per second
-    let horizontalSpeed = (this.speedRate > 1 ? baseSpeed / 4 : baseSpeed / 3);
+    let horizontalSpeed = (this.speedRate > 1 ? baseSpeed / 5 : baseSpeed / 4);
 
     if (this.armMovement > 0) {
-      this.HERO.position.z += horizontalSpeed;
-      this.HERO.rotation.x = 1;
+      if (this.HERO.position.z + horizontalSpeed < this.worldConstants.boxMaxWidth/2) {
+        this.HERO.position.z += horizontalSpeed;
+        this.HERO.rotation.x = 1;
+        if (this.worldConstants.moveCameraZ) {
+          this.camera.position.z += horizontalSpeed;
+        }
+      }
     } else if (this.armMovement < 0) {
-      this.HERO.position.z -= horizontalSpeed;
-      this.HERO.rotation.x = -1;
+      if (this.HERO.position.z - horizontalSpeed > -this.worldConstants.boxMaxWidth/2) {
+        this.HERO.position.z -= horizontalSpeed;
+        this.HERO.rotation.x = -1;
+        if (this.worldConstants.moveCameraZ) {
+          this.camera.position.z -= horizontalSpeed;
+        }
+      }
     } else {
       this.HERO.rotation.x = 0;
     }
@@ -245,6 +249,8 @@ class Engine {
     this.HERO.position.x += moveDistance;
     // @ts-ignore
     this.camera.position.x += moveDistance;
+
+    this.world.moveX(moveDistance);
   }
 
   render() {
