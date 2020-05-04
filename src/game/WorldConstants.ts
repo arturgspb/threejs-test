@@ -7,6 +7,8 @@ class WorldConstants {
   boxCount = 1000;
   // отступ вперед от предыдущего столбика
   boxXCoordsOffset = 150;
+
+  looseOnBoxContact = false;
 }
 
 

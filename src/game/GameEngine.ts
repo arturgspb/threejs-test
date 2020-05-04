@@ -153,7 +153,7 @@ class GameEngine {
 
     var loader = new GLTFLoader();
 
-    loader.load('https://threejs.org/examples/models/gltf/Flamingo.glb', (gltf) => {
+    loader.load('models/gltf/Flamingo.glb', (gltf) => {
       var mesh = gltf.scene.children[0];
 
       var s = 0.35;
@@ -228,7 +228,7 @@ class GameEngine {
     let horizontalSpeed = (this.speedRate > 1 ? baseSpeed / 5 : baseSpeed / 4);
 
     if (this.armMovement > 0) {
-      if (this.HERO.position.z + horizontalSpeed < this.worldConstants.boxMaxWidth/2) {
+      if (this.HERO.position.z + horizontalSpeed < this.worldConstants.boxMaxWidth / 2) {
         this.HERO.position.z += horizontalSpeed;
         this.HERO.rotation.x = 1;
         if (this.worldConstants.moveCameraZ) {
@@ -236,7 +236,7 @@ class GameEngine {
         }
       }
     } else if (this.armMovement < 0) {
-      if (this.HERO.position.z - horizontalSpeed > -this.worldConstants.boxMaxWidth/2) {
+      if (this.HERO.position.z - horizontalSpeed > -this.worldConstants.boxMaxWidth / 2) {
         this.HERO.position.z -= horizontalSpeed;
         this.HERO.rotation.x = -1;
         if (this.worldConstants.moveCameraZ) {
@@ -303,7 +303,9 @@ class GameEngine {
       if ((bounds.xMin <= currColl.xMax && bounds.xMax >= currColl.xMin) &&
         (bounds.yMin <= currColl.yMax && bounds.yMax >= currColl.yMin) &&
         (bounds.zMin <= currColl.zMax && bounds.zMax >= currColl.zMin)) {
-        this.stopMovement();
+        if (this.worldConstants.looseOnBoxContact) {
+          this.stopMovement();
+        }
       }
     }
   }

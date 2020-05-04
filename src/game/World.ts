@@ -49,7 +49,7 @@ class World {
 
 
     var wGLTF_Loader = new GLTFLoader();
-    wGLTF_Loader.load('models/tree2.glb', (gltf) => {
+    wGLTF_Loader.load('models/gltf/tree2.glb', (gltf) => {
       let model = gltf.scene;
 
       for (let i = 0; i < this.worldConstants.boxCount; i += 7) {
