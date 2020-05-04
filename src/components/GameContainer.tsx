@@ -1,17 +1,15 @@
-import React, {useContext, useEffect, useReducer, useState} from "react";
-import Engine from "../game/engine";
+import React, {useContext, useEffect} from "react";
+import GameEngine from "../game/GameEngine";
 import {GameContext} from "../GameStore";
 
 function GameContainer() {
 
   const {state, dispatch} = useContext(GameContext);
 
-  console.log('GameContainer');
-
   useEffect(() => {
     const container = document.getElementById('container');
     if (container !== null) {
-      let newEngine = new Engine(container, dispatch);
+      let newEngine = new GameEngine(container, dispatch);
       newEngine.run();
     }
     console.log('GameContainer');

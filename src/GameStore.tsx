@@ -30,7 +30,6 @@ class Store extends React.Component<any, IGameState> {
   }
 
   reducer(state: IGameState, action: any) {
-    console.log('X state', state);
     switch (action.type) {
       case 'inc_time':
         let gameTimeSec = state.gameTimeSec || 0;

@@ -1,10 +1,9 @@
 import * as THREE from "three";
 import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader";
-import World from "./world";
-import {Dispatch, ReducerAction} from "react";
+import World from "./World";
 import WorldConstants from "./WorldConstants";
 
-class Engine {
+class GameEngine {
 
   private container: HTMLElement;
 
@@ -35,9 +34,8 @@ class Engine {
     this.camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 1, 5000);
 
     this.scene = new THREE.Scene();
-
-    this.world = new World();
     this.worldConstants = new WorldConstants();
+    this.world = new World(this.worldConstants);
   }
 
   getScene() {
@@ -69,13 +67,16 @@ class Engine {
     this.camera.rotation.set(0, cameraRotation, 0);
 
     // RENDERER
-    this.renderer = new THREE.WebGLRenderer({antialias: true});
-    this.renderer.setPixelRatio(window.devicePixelRatio);
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.container.appendChild(this.renderer.domElement);
-    this.renderer.outputEncoding = THREE.sRGBEncoding;
-    this.renderer.shadowMap.enabled = true;
+    let renderer = new THREE.WebGLRenderer({antialias: true});
 
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    this.container.appendChild(renderer.domElement);
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    this.renderer = renderer;
     const onWindowResize = () => {
       if (this.camera) {
         this.camera.aspect = window.innerWidth / window.innerHeight;
@@ -146,7 +147,7 @@ class Engine {
     this.world.addGround(this);
     this.world.addSky(this);
 
-    for (let i = 0; i < 1000; i++) {
+    for (let i = 0; i < this.worldConstants.boxCount; i++) {
       this.addBox(this.scene, i);
     }
 
@@ -179,7 +180,7 @@ class Engine {
     let height = 50;
     let boxMaxWidth = this.worldConstants.boxMaxWidth;
 
-    let cx = 150 * x;
+    let cx = this.worldConstants.boxXCoordsOffset * x;
     let cy = height / 2;
     let cz = (Math.random() * boxMaxWidth) - (boxMaxWidth / 2);
 
@@ -308,4 +309,4 @@ class Engine {
   }
 }
 
-export default Engine;
+export default GameEngine;
