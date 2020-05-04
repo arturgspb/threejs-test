@@ -105,10 +105,14 @@ class GameEngine {
           this.leftMovement = 1;
           break;
         case 'ArrowUp':
-          this.speedRate = 3;
+          if (!this.turbo) {
+            this.speedRate = 3;
+          }
           break;
         case 'ArrowDown':
-          this.speedRate = 0.5;
+          if (!this.turbo) {
+            this.speedRate = 0.5;
+          }
           break;
         case 'Space':
           this.speedRate = 4;
@@ -159,7 +163,7 @@ class GameEngine {
       var s = 0.35;
       mesh.scale.set(s, s, s);
       mesh.position.x = -1000;
-      mesh.position.y = 50;
+      mesh.position.y = this.worldConstants.heroY;
       mesh.rotation.y = 1.55;
 
       mesh.castShadow = true;
@@ -230,16 +234,20 @@ class GameEngine {
     if (this.armMovement > 0) {
       if (this.HERO.position.z + horizontalSpeed < this.worldConstants.boxMaxWidth / 2) {
         this.HERO.position.z += horizontalSpeed;
-        this.HERO.rotation.x = 1;
-        if (this.worldConstants.moveCameraZ) {
+        if (this.HERO.rotation.x < 1) {
+          this.HERO.rotation.x += 0.05;
+        }
+        if (this.worldConstants.moveCameraZ && this.HERO.position.z > 50) {
           this.camera.position.z += horizontalSpeed;
         }
       }
     } else if (this.armMovement < 0) {
       if (this.HERO.position.z - horizontalSpeed > -this.worldConstants.boxMaxWidth / 2) {
         this.HERO.position.z -= horizontalSpeed;
-        this.HERO.rotation.x = -1;
-        if (this.worldConstants.moveCameraZ) {
+        if (this.HERO.rotation.x > -1) {
+          this.HERO.rotation.x -= 0.05;
+        }
+        if (this.worldConstants.moveCameraZ&& this.HERO.position.z < -50) {
           this.camera.position.z -= horizontalSpeed;
         }
       }

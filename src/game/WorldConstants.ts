@@ -9,6 +9,8 @@ class WorldConstants {
   boxXCoordsOffset = 150;
 
   looseOnBoxContact = false;
+
+  heroY = 50;
 }
 
 
