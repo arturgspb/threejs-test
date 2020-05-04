@@ -1,15 +1,17 @@
-import React, {Component, useState} from 'react';
+import React from 'react';
 import Timer from "./components/Timer";
 import GameContainer from "./components/GameContainer";
+import Store from "./GameStore";
 
 
 function Game() {
 
+  console.log('Game')
   return (
-    <div>
+    <Store>
       <GameContainer/>
       <Timer/>
-    </div>
+    </Store>
   )
 }
 

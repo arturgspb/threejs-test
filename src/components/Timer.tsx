@@ -1,5 +1,6 @@
-import React, {useContext, useEffect, useState} from "react";
+import React, {useContext, useEffect, useReducer, useState} from "react";
 import styled from "styled-components";
+import {GameContext} from "../GameStore";
 
 const Title = styled.div`
   padding: 0 10px;
@@ -11,23 +12,56 @@ const Title = styled.div`
   position: fixed;
   top: 0;
   right: 0;
+  
+  background: #abbfde;
+  border-radius: 10px;
+  width: 200px;
 `;
 
 
 function Timer(props: any) {
-  const [seconds, setSeconds] = useState(0);
+  const {state, dispatch} = useContext(GameContext);
+  const [timer, setTimer] = useState();
+
+  function startTimer() {
+
+    if (!timer) {
+      const newTimer = setInterval(() => {
+        dispatch({type: 'inc_time'});
+      }, 1000);
+      setTimer(newTimer);
+    }
+  }
+
+  function stopTimer() {
+    if (timer) {
+      clearInterval(timer);
+      setTimer(null);
+    }
+  }
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setSeconds(seconds + 1);
-    }, 1000);
-
-    return function cleanup() {
-      clearInterval(interval);
+    // startTimer();
+    return () => {
+      stopTimer();
     };
-  });
+  }, []);
 
-  return <Title>{seconds}</Title>;
+  useEffect(() => {
+    if (state.status) {
+      if (state.status === 'running') {
+        startTimer();
+      } else {
+        stopTimer();
+      }
+    }
+  }, [state.status]);
+
+  return (
+    <Title>
+      {state.gameTimeSec} {state.status}
+    </Title>
+  );
 }
 
 export default Timer;

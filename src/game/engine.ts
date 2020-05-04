@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader";
 import World from "./world";
+import {Dispatch, ReducerAction} from "react";
 
 class Engine {
 
@@ -21,8 +22,11 @@ class Engine {
   private speedRate = 1;
   private collisions = [];
 
-  constructor(container: HTMLElement) {
+  public dispatch: Function;
+
+  constructor(container: HTMLElement, dispatch: Function) {
     this.container = container;
+    this.dispatch = dispatch;
 
     // view-source:https://stemkoski.github.io/Three.js/Collision-Detection.html
     this.camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 1, 5000);
@@ -71,10 +75,10 @@ class Engine {
 
   initInput() {
     window.addEventListener('keydown', (e) => {
-      console.log('event.code', e.code);
+      // console.log('event.code', e.code);
       switch (e.code) {
         case 'KeyP':
-          // pause
+          this.dispatch({type: "toggle_pause_game"});
           break;
         case 'ArrowRight':
           this.armMovement = 1;
@@ -91,7 +95,7 @@ class Engine {
           this.speedRate = 0.5;
           break;
         case 'Space':
-          this.speedRate = 6;
+          this.speedRate = 4;
           this.turbo = 1;
           break;
       }
@@ -171,7 +175,7 @@ class Engine {
     let height = 50;
     let boxMaxWidth = 200;
 
-    let cx = 100 * x;
+    let cx = 150 * x;
     let cy = height / 2;
     let cz = (Math.random() * boxMaxWidth) - (boxMaxWidth / 2);
 
@@ -204,9 +208,13 @@ class Engine {
   }
 
   onWindowResize() {
-    this.camera.aspect = window.innerWidth / window.innerHeight;
-    this.camera.updateProjectionMatrix();
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    if (this.camera) {
+      this.camera.aspect = window.innerWidth / window.innerHeight;
+      this.camera.updateProjectionMatrix();
+    }
+    if (this.renderer) {
+      this.renderer.setSize(window.innerWidth, window.innerHeight);
+    }
   }
 
   animate() {
@@ -220,7 +228,7 @@ class Engine {
     if (!this.HERO) {
       return;
     }
-    let baseSpeed = 150 * delta;
+    let baseSpeed = 350 * delta;
     let moveDistance = (baseSpeed * this.speedRate); // 200 pixels per second
     let horizontalSpeed = (this.speedRate > 1 ? baseSpeed / 4 : baseSpeed / 3);
 
@@ -261,7 +269,7 @@ class Engine {
       return;
     }
     this.isFinish = true;
-    console.log('!Finish');
+    this.dispatch({type: "loose_game"});
   }
 
   detectCollisions() {
