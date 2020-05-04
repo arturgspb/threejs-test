@@ -70,8 +70,12 @@ class Engine {
   }
 
   initInput() {
-    window.addEventListener('keydown', (event) => {
-      switch (event.code) {
+    window.addEventListener('keydown', (e) => {
+      console.log('event.code', e.code);
+      switch (e.code) {
+        case 'KeyP':
+          // pause
+          break;
         case 'ArrowRight':
           this.armMovement = 1;
           this.rightMovement = 1;
