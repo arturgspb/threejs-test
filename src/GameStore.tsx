@@ -1,6 +1,4 @@
-import React, {
-  useState
-} from "react";
+import React from "react";
 
 import {createContext} from "react";
 
@@ -18,7 +16,6 @@ export const GameContext = createContext({} as IGameContext);
 
 // @ts-ignore
 class Store extends React.Component<any, IGameState> {
-
 
   constructor(props: any) {
     super(props);
@@ -47,7 +44,6 @@ class Store extends React.Component<any, IGameState> {
 
       case 'loose_game':
         return {...state, status: 'loose'};
-        break;
 
       default:
         return state;
@@ -71,22 +67,5 @@ class Store extends React.Component<any, IGameState> {
     )
   }
 }
-
-// function Store({children}) {
-//
-//   // const [state, setState] = useState(initialState);
-//   console.log('Store', state);
-//
-//
-//   return (
-//     <GameContext.Provider value={{
-//       state: state,
-//       dispatch: dispatch,
-//     }}>
-//       {children}
-//     </GameContext.Provider>
-//   )
-// }
-
 
 export default Store;

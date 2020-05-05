@@ -18,11 +18,10 @@ class GameEngine {
   private isFinish = false;
   private isStopped = false;
   private isResumed = false;
-  private isCameraTurbo = false;
   private armMovement = 0;
   private leftMovement = 0;
   private rightMovement = 0;
-  private turbo = 0;
+  private turbo = false;
   private speedRate = 1;
   private currSpeed = 1;
   private collisions = [];
@@ -122,14 +121,18 @@ class GameEngine {
           }
           break;
         case 'Space':
+          if (!this.turbo) {
+            this.bgMusic.playTurbo();
+          }
           this.speedRate = 4;
-          this.turbo = 1;
+          this.turbo = true;
           break;
       }
     }, false);
     window.addEventListener('keyup', (e) => {
       if (e.code === 'Space') {
-        this.turbo = 0;
+        this.turbo = false;
+        this.bgMusic.stopTurbo();
       }
       if (e.code === 'ArrowUp' || e.code === 'ArrowDown' || e.code === 'Space') {
         if (!this.turbo) {
@@ -301,8 +304,12 @@ class GameEngine {
     }
 
     this.HERO.position.x += moveDistance;
-    // @ts-ignore
-    this.camera.position.x += moveDistance;
+
+    if (this.turbo) {
+      this.camera.position.x += moveDistance;
+    } else {
+      this.camera.position.x += moveDistance;
+    }
 
     let fovTarget = this.turbo ? 60 : 35;
     let fovChange = this.lerp(this.camera.fov, fovTarget, 0.17);

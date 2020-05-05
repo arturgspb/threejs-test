@@ -2,7 +2,6 @@ import GameEngine from "./GameEngine";
 import * as THREE from "three";
 import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader";
 import WorldConstants from "./WorldConstants";
-import {OBJLoader} from "three/examples/jsm/loaders/OBJLoader";
 
 class World {
 

@@ -14,12 +14,12 @@ const Title = styled.div`
   right: 0;
   
   background: #abbfde;
-  border-radius: 10px;
+  border-radius: 0 0 0 10px;
   width: 200px;
 `;
 
 
-function Timer(props: any) {
+function Timer() {
   const {state, dispatch} = useContext(GameContext);
   const [timer, setTimer] = useState();
 

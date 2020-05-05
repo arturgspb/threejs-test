@@ -7,40 +7,60 @@ import GameEngine from "./GameEngine";
 class BgMusic {
 
   private engine: GameEngine;
-  private sound: THREE.Audio | null = null;
+  private defaultSound: THREE.Audio;
+  private turboSound: THREE.Audio;
 
   constructor(engine: GameEngine) {
     this.engine = engine;
 
-
-  }
-
-  play() {
     var listener = new THREE.AudioListener();
     this.engine.getCamera().add(listener);
-    this.sound = new THREE.Audio(listener);
+    this.defaultSound = new THREE.Audio(listener);
+    this.turboSound = new THREE.Audio(listener);
 
+    let trackNum = this.getRandomInt(2);
     var audioLoader = new THREE.AudioLoader();
-    audioLoader.load('/audio/boost_track1.mp3', (buffer) => {
-      if (this.sound) {
-        this.sound.setBuffer(buffer);
-        this.sound.setLoop(true);
-        this.sound.setVolume(0.5);
-        this.sound.play();
-      }
+
+    audioLoader.load('/audio/boost_track1.mp3' , (buffer) => {
+      this.turboSound.setBuffer(buffer);
+      this.turboSound.setLoop(true);
+      this.turboSound.setVolume(0.4);
+    });
+
+    audioLoader.load('/audio/track' + trackNum + '.mp3', (buffer) => {
+      this.defaultSound.setBuffer(buffer);
+      this.defaultSound.setLoop(true);
+      this.defaultSound.setVolume(0.4);
+      this.defaultSound.play();
     });
   }
 
+  getRandomInt(max: number) {
+    return Math.floor(Math.random() * Math.floor(max)) + 1;
+  }
+
+  play() {
+    // this.defaultSound.play();
+  }
+
   pause() {
-    if (this.sound) {
-      this.sound.setVolume(0.1);
-    }
+    this.defaultSound.setVolume(0.1);
+    this.turboSound.setVolume(0.1);
   }
 
   resume() {
-    if (this.sound) {
-      this.sound.setVolume(0.5);
-    }
+    this.defaultSound.setVolume(0.4);
+    this.turboSound.setVolume(0.4);
+  }
+
+  playTurbo() {
+    this.turboSound.play();
+    this.defaultSound.pause();
+  }
+
+  stopTurbo() {
+    this.turboSound.pause();
+    this.defaultSound.play();
   }
 }
 
