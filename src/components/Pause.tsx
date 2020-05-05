@@ -30,11 +30,32 @@ const Desc = styled.div`
 function Pause(props: any) {
   const {state} = useContext(GameContext);
 
+  let getContent = (gameStatus: string) => {
+    switch (gameStatus) {
+      case 'pause':
+        return <Layer>
+          <Title>Pause</Title>
+          <Desc>Press key "P" for resume</Desc>
+        </Layer>;
+
+      case 'finish':
+        return <Layer>
+          <Title>Finish</Title>
+          <Desc>Press key "Esc" to go to the menu</Desc>
+        </Layer>;
+
+      case 'loose':
+        return <Layer>
+          <Title>Krya-a-a-a-a 😩</Title>
+          <Desc>Press key "Esc" to go to the menu</Desc>
+        </Layer>;
+    }
+    return '';
+  };
   return (
-    <div>{state.status === 'pause' ? <Layer>
-      <Title>Pause</Title>
-      <Desc>Press key "P" for resume</Desc>
-    </Layer> : ''}</div>
+    <div>
+      {getContent(state.status)}
+    </div>
   );
 }
 

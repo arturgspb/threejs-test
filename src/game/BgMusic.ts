@@ -62,6 +62,11 @@ class BgMusic {
     this.turboSound.pause();
     this.defaultSound.play();
   }
+
+  stopAll() {
+    this.turboSound.stop();
+    this.defaultSound.stop();
+  }
 }
 
 

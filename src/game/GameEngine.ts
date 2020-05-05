@@ -15,6 +15,7 @@ class GameEngine {
   private mixers: THREE.AnimationMixer[] = [];
   private HERO: any;
   private clock = new THREE.Clock();
+  private isLoose = false;
   private isFinish = false;
   private isStopped = false;
   private isResumed = false;
@@ -97,11 +98,20 @@ class GameEngine {
 
   initInput() {
     window.addEventListener('keydown', (e) => {
-      // console.log('event.code', e.code);
+      console.log('event.code', e.code);
       switch (e.code) {
         case 'KeyP':
           this.pauseGame();
           break;
+
+        case 'Escape':
+          console.log('this.isFinish || this.isLoose', this.isFinish, this.isLoose)
+          if (this.isFinish || this.isLoose) {
+            this.bgMusic.stopAll();
+            window.location.reload(false);
+          }
+          break;
+
         case 'ArrowRight':
           this.armMovement = 1;
           this.rightMovement = 1;
@@ -245,6 +255,9 @@ class GameEngine {
     requestAnimationFrame(() => {
       this.animate();
     });
+    if (this.isLoose) {
+      return;
+    }
     if (this.isFinish) {
       return;
     }
@@ -337,15 +350,29 @@ class GameEngine {
     }
     this.update(delta);
     this.detectCollisions();
+    this.detectFinish();
     this.renderer.render(this.scene, this.camera);
   }
 
-  losseGame() {
+  looseGame() {
+    if (this.isLoose) {
+      return;
+    }
+    this.bgMusic.stopTurbo();
+    this.isLoose = true;
+    this.dispatch({type: "loose_game"});
+  }
+
+  finishGame() {
+    if (this.isLoose) {
+      return;
+    }
     if (this.isFinish) {
       return;
     }
+
     this.isFinish = true;
-    this.dispatch({type: "loose_game"});
+    this.dispatch({type: "finish_game"});
   }
 
   detectCollisions() {
@@ -373,9 +400,20 @@ class GameEngine {
         (bounds.yMin <= currColl.yMax && bounds.yMax >= currColl.yMin) &&
         (bounds.zMin <= currColl.zMax && bounds.zMax >= currColl.zMin)) {
         if (this.worldConstants.looseOnBoxContact) {
-          this.losseGame();
+          this.looseGame();
         }
       }
+    }
+  }
+
+
+  detectFinish() {
+    if (!this.HERO) {
+      return;
+    }
+    let lastBox: any = this.collisions[this.collisions.length - 1];
+    if (lastBox.xMax - this.HERO.position.x < -200) {
+      this.finishGame();
     }
   }
 }

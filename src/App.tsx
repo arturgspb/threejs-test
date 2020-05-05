@@ -12,6 +12,7 @@ function App() {
   return (
     <React.StrictMode>
       <link href="https://fonts.googleapis.com/css2?family=Faster+One&display=swap" rel="stylesheet" />
+      <link href="https://fonts.googleapis.com/css2?family=Questrial&display=swap" rel="stylesheet" />
       <div className="App">
         {
           start ? <Game/> : <Menu selectGame={selectGame}/>

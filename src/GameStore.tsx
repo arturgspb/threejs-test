@@ -45,6 +45,9 @@ class Store extends React.Component<any, IGameState> {
       case 'loose_game':
         return {...state, status: 'loose'};
 
+      case 'finish_game':
+        return {...state, status: 'finish'};
+
       default:
         return state;
     }

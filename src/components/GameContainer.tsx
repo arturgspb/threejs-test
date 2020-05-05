@@ -12,8 +12,6 @@ function GameContainer() {
       let newEngine = new GameEngine(container, dispatch);
       newEngine.run();
     }
-    console.log('GameContainer');
-
     return () => {
       console.log('destroy scene');
     };
