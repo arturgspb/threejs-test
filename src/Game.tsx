@@ -7,7 +7,6 @@ import Pause from "./components/Pause";
 
 function Game() {
 
-  console.log('Game')
   return (
     <Store>
       <GameContainer/>

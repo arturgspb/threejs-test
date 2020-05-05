@@ -2,6 +2,7 @@ import * as THREE from "three";
 import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader";
 import World from "./World";
 import WorldConstants from "./WorldConstants";
+import BgMusic from "./BgMusic";
 
 class GameEngine {
 
@@ -26,6 +27,7 @@ class GameEngine {
   private currSpeed = 1;
   private collisions = [];
   private world: World;
+  private bgMusic: BgMusic;
   private worldConstants: WorldConstants;
 
   public dispatch: Function;
@@ -40,6 +42,8 @@ class GameEngine {
     this.scene = new THREE.Scene();
     this.worldConstants = new WorldConstants();
     this.world = new World(this.worldConstants);
+    this.bgMusic = new BgMusic(this);
+    this.bgMusic.play();
   }
 
   getScene() {
@@ -48,6 +52,10 @@ class GameEngine {
 
   getRenderer() {
     return this.renderer;
+  }
+
+  getCamera() {
+    return this.camera;
   }
 
   run() {
@@ -93,11 +101,7 @@ class GameEngine {
       // console.log('event.code', e.code);
       switch (e.code) {
         case 'KeyP':
-          let state = this.dispatch({type: "toggle_pause_game"});
-          this.isStopped = (state.status === 'pause');
-          if (!this.isStopped) {
-            this.isResumed = true;
-          }
+          this.pauseGame();
           break;
         case 'ArrowRight':
           this.armMovement = 1;
@@ -146,6 +150,21 @@ class GameEngine {
         this.armMovement = 0;
       }
     }, false);
+  }
+
+  private pauseGame() {
+    let state = this.dispatch({type: "toggle_pause_game"});
+
+    this.isStopped = (state.status === 'pause');
+    if (this.isStopped) {
+      this.bgMusic.pause();
+    } else {
+      this.bgMusic.resume();
+    }
+    if (!this.isStopped) {
+      this.isResumed = true;
+    }
+
   }
 
   initObjects() {

@@ -59,7 +59,7 @@ function Timer(props: any) {
 
   return (
     <Title>
-      {state.gameTimeSec} {state.status}
+      {state.gameTimeSec} sec.
     </Title>
   );
 }
