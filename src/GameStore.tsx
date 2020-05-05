@@ -22,7 +22,7 @@ class Store extends React.Component<any, IGameState> {
 
     this.state = {
       gameTimeSec: 0,
-      status: 'running',
+      status: 'menu',
     } as IGameState;
   }
 
@@ -42,11 +42,17 @@ class Store extends React.Component<any, IGameState> {
         }
         return {...state, status: newStatus};
 
+      case 'start_game':
+        return {...state, status: 'running'};
+
       case 'loose_game':
         return {...state, status: 'loose'};
 
       case 'finish_game':
         return {...state, status: 'finish'};
+
+      case 'menu_game':
+        return {...state, status: 'menu'};
 
       default:
         return state;

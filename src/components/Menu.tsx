@@ -1,5 +1,6 @@
-import React, {useEffect} from "react";
+import React, {useContext, useEffect} from "react";
 import styled from "styled-components";
+import {GameContext} from "../GameStore";
 
 const Title = styled.div`
 font-size: 4em;
@@ -49,14 +50,12 @@ const Keys = styled.div`
   text-align: left;
 `;
 
-type MenuProps = {
-  selectGame: Function,
-}
 
+function Menu() {
+  const {dispatch} = useContext(GameContext);
 
-function Menu({selectGame}: MenuProps) {
   function select(gameDifficultyLevel: string) {
-    selectGame(gameDifficultyLevel);
+    dispatch({type: 'start_game'});
   }
 
   useEffect(() => {

@@ -5,7 +5,7 @@ class WorldConstants {
   moveCameraZ = false;
   // общее кол-во столбов
   //  TODO посчитать от стандартной скорости и предельному времени партии
-  boxCount = 2;
+  boxCount = 250;
   // отступ вперед от предыдущего столбика
   boxXCoordsOffset = 350;
 

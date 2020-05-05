@@ -46,6 +46,10 @@ class GameEngine {
     this.bgMusic.play();
   }
 
+  destroy() {
+    this.bgMusic.stopAll();
+  }
+
   getScene() {
     return this.scene;
   }
@@ -98,17 +102,16 @@ class GameEngine {
 
   initInput() {
     window.addEventListener('keydown', (e) => {
-      console.log('event.code', e.code);
+      // console.log('event.code', e.code);
       switch (e.code) {
         case 'KeyP':
           this.pauseGame();
           break;
 
         case 'Escape':
-          console.log('this.isFinish || this.isLoose', this.isFinish, this.isLoose)
           if (this.isFinish || this.isLoose) {
             this.bgMusic.stopAll();
-            window.location.reload(false);
+            this.dispatch({type: "menu_game"})
           }
           break;
 

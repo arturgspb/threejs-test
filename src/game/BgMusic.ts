@@ -21,7 +21,7 @@ class BgMusic {
     let trackNum = this.getRandomInt(2);
     var audioLoader = new THREE.AudioLoader();
 
-    audioLoader.load('/audio/boost_track1.mp3' , (buffer) => {
+    audioLoader.load('/audio/boost_track1.mp3', (buffer) => {
       this.turboSound.setBuffer(buffer);
       this.turboSound.setLoop(true);
       this.turboSound.setVolume(0.4);
@@ -54,18 +54,26 @@ class BgMusic {
   }
 
   playTurbo() {
-    this.turboSound.play();
+    if (!this.turboSound.isPlaying) {
+      this.turboSound.play();
+    }
     this.defaultSound.pause();
   }
 
   stopTurbo() {
+    if (!this.defaultSound.isPlaying) {
+      this.defaultSound.play();
+    }
     this.turboSound.pause();
-    this.defaultSound.play();
   }
 
   stopAll() {
-    this.turboSound.stop();
-    this.defaultSound.stop();
+    if (this.turboSound) {
+      this.turboSound.stop();
+    }
+    if (this.defaultSound) {
+      this.defaultSound.stop();
+    }
   }
 }
 
