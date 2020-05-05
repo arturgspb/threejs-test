@@ -15,6 +15,8 @@ class GameEngine {
   private HERO: any;
   private clock = new THREE.Clock();
   private isFinish = false;
+  private isStopped = false;
+  private isResumed = false;
   private armMovement = 0;
   private leftMovement = 0;
   private rightMovement = 0;
@@ -94,7 +96,11 @@ class GameEngine {
       // console.log('event.code', e.code);
       switch (e.code) {
         case 'KeyP':
-          this.dispatch({type: "toggle_pause_game"});
+          let state = this.dispatch({type: "toggle_pause_game"});
+          this.isStopped = (state.status === 'pause');
+          if (!this.isStopped) {
+            this.isResumed = true;
+          }
           break;
         case 'ArrowRight':
           this.armMovement = 1;
@@ -220,6 +226,12 @@ class GameEngine {
     requestAnimationFrame(() => {
       this.animate();
     });
+    if (this.isFinish) {
+      return;
+    }
+    if (this.isStopped) {
+      return;
+    }
     this.render();
   }
 
@@ -247,7 +259,7 @@ class GameEngine {
         if (this.HERO.rotation.x > -1) {
           this.HERO.rotation.x -= 0.05;
         }
-        if (this.worldConstants.moveCameraZ&& this.HERO.position.z < -50) {
+        if (this.worldConstants.moveCameraZ && this.HERO.position.z < -50) {
           this.camera.position.z -= horizontalSpeed;
         }
       }
@@ -263,10 +275,11 @@ class GameEngine {
   }
 
   render() {
-    if (this.isFinish) {
+    let delta = this.clock.getDelta();
+    if (this.isResumed) {
+      this.isResumed = false;
       return;
     }
-    let delta = this.clock.getDelta();
 
     for (let i = 0; i < this.mixers.length; i++) {
       // @ts-ignore
@@ -279,7 +292,7 @@ class GameEngine {
     this.renderer.render(this.scene, this.camera);
   }
 
-  stopMovement() {
+  losseGame() {
     if (this.isFinish) {
       return;
     }
@@ -312,7 +325,7 @@ class GameEngine {
         (bounds.yMin <= currColl.yMax && bounds.yMax >= currColl.yMin) &&
         (bounds.zMin <= currColl.zMax && bounds.zMax >= currColl.zMin)) {
         if (this.worldConstants.looseOnBoxContact) {
-          this.stopMovement();
+          this.losseGame();
         }
       }
     }

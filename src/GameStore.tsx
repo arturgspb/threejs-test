@@ -4,7 +4,7 @@ import React, {
 
 import {createContext} from "react";
 
-interface IGameState {
+export interface IGameState {
   gameTimeSec: number;
   status: string;
 }
@@ -58,6 +58,7 @@ class Store extends React.Component<any, IGameState> {
     const dispatch = (action: any) => {
       let newState = this.reducer(this.state, action);
       this.setState(newState);
+      return newState;
     };
 
     return (

@@ -1,12 +1,13 @@
 class WorldConstants {
   // ширина полетного места
-  boxMaxWidth = 300;
+  boxMaxWidth = 250;
   // Если true, то глаза сильнее напрягаются
   moveCameraZ = false;
   // общее кол-во столбов
+  //  TODO посчитать от стандартной скорости и предельному времени партии
   boxCount = 300;
   // отступ вперед от предыдущего столбика
-  boxXCoordsOffset = 150;
+  boxXCoordsOffset = 250;
 
   looseOnBoxContact = false;
 
