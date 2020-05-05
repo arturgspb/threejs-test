@@ -12,6 +12,10 @@ class WorldConstants {
   looseOnBoxContact = false;
 
   heroY = 50;
+
+  cameraTop = 70;
+  cameraBehind = -1150;
+  cameraRotation = -1.6;
 }
 
 

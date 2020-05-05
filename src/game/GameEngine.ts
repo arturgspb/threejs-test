@@ -17,11 +17,13 @@ class GameEngine {
   private isFinish = false;
   private isStopped = false;
   private isResumed = false;
+  private isCameraTurbo = false;
   private armMovement = 0;
   private leftMovement = 0;
   private rightMovement = 0;
   private turbo = 0;
   private speedRate = 1;
+  private currSpeed = 1;
   private collisions = [];
   private world: World;
   private worldConstants: WorldConstants;
@@ -60,13 +62,8 @@ class GameEngine {
   }
 
   initGraphics() {
-
-    let cameraTop = 60;
-    let cameraBehind = -1150;
-    let cameraRotation = -1.6;
-
-    this.camera.position.set(cameraBehind, cameraTop, 0);
-    this.camera.rotation.set(0, cameraRotation, 0);
+    this.camera.position.set(this.worldConstants.cameraBehind, this.worldConstants.cameraTop, 0);
+    this.camera.rotation.set(0, this.worldConstants.cameraRotation, 0);
 
     // RENDERER
     let renderer = new THREE.WebGLRenderer({antialias: true});
@@ -235,20 +232,35 @@ class GameEngine {
     this.render();
   }
 
+  /**
+   * To make this transition extra smooth, we’ll use linear interpolation (lerp) for the speedUp variable.
+   * https://tympanus.net/codrops/2019/11/13/high-speed-light-trails-in-three-js/
+   */
+  lerp(current: number, target: number, speed = 0.1, limit = 0.001) {
+    let change = (target - current) * speed;
+    if (Math.abs(change) < limit) {
+      change = target - current;
+    }
+    return change;
+  }
+
   update(delta: number) {
     if (!this.HERO) {
       return;
     }
+    this.currSpeed += this.lerp(this.currSpeed, this.speedRate, 0.05);
     let baseSpeed = 350 * delta;
-    let moveDistance = (baseSpeed * this.speedRate); // 200 pixels per second
-    let horizontalSpeed = (this.speedRate > 1 ? baseSpeed / 5 : baseSpeed / 4);
+    let moveDistance = (baseSpeed * this.currSpeed); // 200 pixels per second
+    let horizontalSpeed = (this.currSpeed > 1 ? baseSpeed / 5 : baseSpeed / 4);
 
     if (this.armMovement > 0) {
       if (this.HERO.position.z + horizontalSpeed < this.worldConstants.boxMaxWidth / 2) {
         this.HERO.position.z += horizontalSpeed;
-        if (this.HERO.rotation.x < 1) {
-          this.HERO.rotation.x += 0.05;
-        }
+        this.HERO.rotation.x += this.lerp(
+          this.HERO.rotation.x,
+          1,
+          0.05
+        );
         if (this.worldConstants.moveCameraZ && this.HERO.position.z > 50) {
           this.camera.position.z += horizontalSpeed;
         }
@@ -256,9 +268,11 @@ class GameEngine {
     } else if (this.armMovement < 0) {
       if (this.HERO.position.z - horizontalSpeed > -this.worldConstants.boxMaxWidth / 2) {
         this.HERO.position.z -= horizontalSpeed;
-        if (this.HERO.rotation.x > -1) {
-          this.HERO.rotation.x -= 0.05;
-        }
+        this.HERO.rotation.x -= this.lerp(
+          Math.abs(this.HERO.rotation.x),
+          1,
+          0.05
+        );
         if (this.worldConstants.moveCameraZ && this.HERO.position.z < -50) {
           this.camera.position.z -= horizontalSpeed;
         }
@@ -270,6 +284,14 @@ class GameEngine {
     this.HERO.position.x += moveDistance;
     // @ts-ignore
     this.camera.position.x += moveDistance;
+
+    let fovTarget = this.turbo ? 60 : 35;
+    let fovChange = this.lerp(this.camera.fov, fovTarget, 0.17);
+    if (fovChange !== 0) {
+      this.camera.fov += fovChange * delta * 6.;
+      this.camera.updateProjectionMatrix();
+    }
+    this.camera.position.y += (fovChange / 2) * delta * 6.;
 
     this.world.moveX(moveDistance);
   }
