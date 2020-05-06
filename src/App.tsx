@@ -3,6 +3,7 @@ import './App.css';
 import Game from "./Game";
 import Store from "./GameStore";
 import BgMusic from "./components/BgMusic";
+import GA from "./components/GA";
 
 
 function App() {
@@ -14,6 +15,7 @@ function App() {
         <Store>
           <Game/>
           <BgMusic/>
+          <GA/>
         </Store>
       </div>
     </React.StrictMode>
