@@ -5,6 +5,7 @@ import {createContext} from "react";
 export interface IGameState {
   gameTimeSec: number;
   status: string;
+  turbo: boolean;
 }
 
 interface IGameContext {
@@ -23,6 +24,7 @@ class Store extends React.Component<any, IGameState> {
     this.state = {
       gameTimeSec: 0,
       status: 'menu',
+      turbo: false,
     } as IGameState;
   }
 
@@ -41,6 +43,9 @@ class Store extends React.Component<any, IGameState> {
           newStatus = 'pause';
         }
         return {...state, status: newStatus};
+
+      case 'turbo':
+        return {...state, turbo: action.active};
 
       case 'start_game':
         return {...state, status: 'running'};

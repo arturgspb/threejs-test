@@ -140,7 +140,7 @@ class World {
       "topColor": {value: new THREE.Color(0x0077ff)},
       "bottomColor": {value: new THREE.Color(0xffffff)},
       "offset": {value: 33},
-      "exponent": {value: 0.6}
+      "exponent": {value: 0.2}
     };
     uniforms["topColor"].value.copy(this.hemiLight.color);
 
@@ -153,7 +153,7 @@ class World {
       uniforms: uniforms,
       vertexShader: vertexShader,
       fragmentShader: fragmentShader,
-      side: THREE.BackSide
+      side: THREE.DoubleSide
     });
 
     var sky = new THREE.Mesh(skyGeo, skyMat);

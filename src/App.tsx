@@ -2,6 +2,7 @@ import React, {useState} from 'react';
 import './App.css';
 import Game from "./Game";
 import Store from "./GameStore";
+import BgMusic from "./components/BgMusic";
 
 
 function App() {
@@ -12,6 +13,7 @@ function App() {
       <div className="App">
         <Store>
           <Game/>
+          <BgMusic/>
         </Store>
       </div>
     </React.StrictMode>

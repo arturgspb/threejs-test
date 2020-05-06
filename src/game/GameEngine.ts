@@ -2,7 +2,7 @@ import * as THREE from "three";
 import {GLTFLoader} from "three/examples/jsm/loaders/GLTFLoader";
 import World from "./World";
 import WorldConstants from "./WorldConstants";
-import BgMusic from "./BgMusic";
+import BgMusic from "../components/BgMusic";
 
 class GameEngine {
 
@@ -27,7 +27,6 @@ class GameEngine {
   private currSpeed = 1;
   private collisions = [];
   private world: World;
-  private bgMusic: BgMusic;
   private worldConstants: WorldConstants;
 
   public dispatch: Function;
@@ -42,12 +41,10 @@ class GameEngine {
     this.scene = new THREE.Scene();
     this.worldConstants = new WorldConstants();
     this.world = new World(this.worldConstants);
-    this.bgMusic = new BgMusic(this);
-    this.bgMusic.play();
   }
 
   destroy() {
-    this.bgMusic.stopAll();
+    // this.bgMusic.destroy();
   }
 
   getScene() {
@@ -65,6 +62,7 @@ class GameEngine {
   run() {
     this.init();
     this.animate();
+    // this.bgMusic.play();
   }
 
   init() {
@@ -110,7 +108,7 @@ class GameEngine {
 
         case 'Escape':
           if (this.isFinish || this.isLoose) {
-            this.bgMusic.stopAll();
+            // this.bgMusic.destroy();
             this.dispatch({type: "menu_game"})
           }
           break;
@@ -135,7 +133,8 @@ class GameEngine {
           break;
         case 'Space':
           if (!this.turbo) {
-            this.bgMusic.playTurbo();
+            this.dispatch({type: "turbo", active: true});
+            // this.bgMusic.playTurbo();
           }
           this.speedRate = 4;
           this.turbo = true;
@@ -145,7 +144,8 @@ class GameEngine {
     window.addEventListener('keyup', (e) => {
       if (e.code === 'Space') {
         this.turbo = false;
-        this.bgMusic.stopTurbo();
+        this.dispatch({type: "turbo", active: false});
+        // this.bgMusic.stopTurbo();
       }
       if (e.code === 'ArrowUp' || e.code === 'ArrowDown' || e.code === 'Space') {
         if (!this.turbo) {
@@ -172,11 +172,6 @@ class GameEngine {
     let state = this.dispatch({type: "toggle_pause_game"});
 
     this.isStopped = (state.status === 'pause');
-    if (this.isStopped) {
-      this.bgMusic.pause();
-    } else {
-      this.bgMusic.resume();
-    }
     if (!this.isStopped) {
       this.isResumed = true;
     }
@@ -361,7 +356,6 @@ class GameEngine {
     if (this.isLoose) {
       return;
     }
-    this.bgMusic.stopTurbo();
     this.isLoose = true;
     this.dispatch({type: "loose_game"});
   }
